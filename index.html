@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CCD Office Solutions">
+<meta name="theme-color" content="#8B6F3F">
+<title>CCD Office Solutions</title>
+
+<!-- App Icons -->
+<link rel="icon" type="image/png" sizes="192x192" href="ccd-icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="ccd-icon-512.png">
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #111827;
+  --ink-mid: #374151;
+  --ink-soft: #6b7280;
+  --ink-faint: #9ca3af;
+  --surface: #ffffff;
+  --canvas: #f3f4f6;
+  --edge: #e5e7eb;
+  --edge-dark: #d1d5db;
+  --accent: #8B6F3F;
+  --accent-mid: #A98956;
+  --accent-light: #F5F0E8;
+  --accent-glow: rgba(139,111,63,0.12);
+  --gold: #8B6F3F;
+  --gold-light: #FFF9ED;
+  --emerald: #059669;
+  --emerald-light: #d1fae5;
+  --ruby: #dc2626;
+  --ruby-light: #fee2e2;
+  --rose: #db2777;
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 12px 40px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.10), 0 32px 64px rgba(0,0,0,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--accent);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -0.3px;
+}
+
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--gold);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.logo em { color: var(--gold); font-style: normal; }
+
+.hdr-right { display: flex; align-items: center; gap: 10px; }
+
+.seg-control {
+  display: flex;
+  background: rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.seg-btn {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  color: rgba(255,255,255,0.65);
+}
+
+.seg-btn.active {
+  background: #fff;
+  color: var(--accent);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.role-pill {
+  background: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.8);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.role-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex-shrink: 0;
+}
+
+/* ── VIEWS ── */
+.view { display: none; }
+.view.active { display: flex; flex-direction: column; min-height: calc(100vh - 60px); }
+
+/* ══════════════════════════════
+   OFFICE VIEW
+══════════════════════════════ */
+.office-shell {
+  display: flex;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+/* Sidebar */
+.wo-sidebar {
+  width: 300px;
+  min-width: 260px;
+  background: var(--surface);
+  border-right: 1px solid var(--edge);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sb-top {
+  padding: 16px;
+  border-bottom: 1px solid var(--edge);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sb-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sb-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.sb-scroll { flex: 1; overflow-y: auto; padding: 10px; }
+
+.wo-row {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--edge);
+  margin-bottom: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: white;
+}
+
+.wo-row:hover { border-color: var(--accent-mid); transform: translateX(3px); }
+.wo-row.active { border-color: var(--accent); background: var(--accent-light); }
+
+.wo-row-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.wo-id { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: 0.4px; }
+.wo-cust { font-weight: 600; font-size: 13px; color: var(--ink); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wo-meta { font-size: 11px; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; }
+
+/* Status badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.badge-pending { background: var(--gold-light); color: #92400e; }
+.badge-progress { background: #dbeafe; color: #1e3a8a; }
+.badge-done { background: var(--emerald-light); color: #065f46; }
+.badge-logged { background: #f3f4f6; color: #374151; }
+
+/* Main area */
+.office-main {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--canvas);
+  padding: 24px;
+}
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.stat-tile {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  border: 1px solid var(--edge);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-tile::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--bar-color, var(--edge-dark));
+  border-radius: 3px 3px 0 0;
+}
+
+.stat-tile.t-all { --bar-color: var(--accent); }
+.stat-tile.t-pending { --bar-color: var(--gold); }
+.stat-tile.t-active { --bar-color: var(--accent-mid); }
+.stat-tile.t-done { --bar-color: var(--emerald); }
+
+.stat-n {
+  font-family: 'Syne', sans-serif;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.stat-lbl { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; color: var(--ink-soft); }
+
+/* Empty / welcome state */
+.welcome-state {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--edge);
+  padding: 64px 40px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.welcome-icon { font-size: 52px; margin-bottom: 16px; opacity: 0.35; }
+.welcome-h { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+.welcome-p { font-size: 14px; color: var(--ink-soft); max-width: 320px; margin: 0 auto; }
+
+/* Detail card */
+.detail-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--edge);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.detail-band {
+  background: linear-gradient(135deg, var(--accent) 0%, #0a3260 100%);
+  padding: 22px 26px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.detail-band-left { flex: 1; min-width: 0; }
+.detail-id { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 1px; margin-bottom: 4px; }
+.detail-cust { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; line-height: 1.2; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.detail-addr { font-size: 13px; color: rgba(255,255,255,0.65); }
+
+.detail-band-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
+.detail-actions { display: flex; gap: 7px; }
+
+/* Tabs */
+.tab-strip {
+  display: flex;
+  padding: 0 20px;
+  gap: 2px;
+  border-bottom: 1px solid var(--edge);
+  background: var(--surface);
+  overflow-x: auto;
+}
+
+.tab-item {
+  padding: 13px 16px;
+  border: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-item:hover { color: var(--ink); }
+.tab-item.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.tab-pane { display: none; padding: 24px 26px; }
+.tab-pane.active { display: block; }
+
+/* Info fields */
+.info-block {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.info-field label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+
+.info-field p { font-size: 14px; font-weight: 500; color: var(--ink); }
+
+.pane-section {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--ink-faint);
+  margin: 20px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pane-section::after { content: ''; flex: 1; height: 1px; background: var(--edge); }
+
+.desc-box {
+  background: var(--canvas);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink-mid);
+  white-space: pre-wrap;
+}
+
+.special-box {
+  background: #fffbeb;
+  border: 1.5px solid #fcd34d;
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--ink-mid);
+  display: flex;
+  gap: 10px;
+}
+
+.special-icon { font-size: 18px; flex-shrink: 0; }
+
+/* Task list */
+.task-line {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--edge);
+  margin-bottom: 7px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.task-check { width: 18px; height: 18px; accent-color: var(--emerald); cursor: pointer; }
+
+/* Material rows */
+.mat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--edge);
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.mat-qty {
+  background: var(--accent);
+  color: white;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 6px;
+  min-width: 36px;
+  text-align: center;
+}
+
+.mat-name { flex: 1; font-weight: 500; }
+.mat-unit { font-size: 12px; color: var(--ink-soft); }
+
+/* Photos */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.photo-thumb {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--edge);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.photo-thumb:hover { transform: scale(1.03); }
+
+.photo-placeholder {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  border: 2px dashed var(--edge-dark);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--ink-soft);
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: var(--canvas);
+}
+
+.photo-placeholder:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.photo-placeholder span { font-size: 22px; }
+
+/* Time records */
+.time-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  padding: 6px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ink-faint);
+}
+
+.time-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 12px;
+  background: var(--canvas);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--edge);
+  margin-bottom: 6px;
+}
+
+.time-member { font-weight: 600; font-size: 14px; }
+.time-date { font-size: 13px; color: var(--ink-soft); }
+.time-chip {
+  background: var(--accent);
+  color: white;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+
+.time-total-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ink);
+  color: white;
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin-top: 12px;
+}
+
+.time-total-lbl { font-size: 12px; font-weight: 600; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.7px; }
+.time-total-val { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; color: var(--gold); }
+
+.crew-note-box {
+  background: var(--gold-light);
+  border: 1.5px solid #fcd34d;
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-mid);
+  margin-top: 14px;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary { background: var(--accent); color: white; box-shadow: 0 2px 8px rgba(15,76,129,0.3); }
+.btn-primary:hover { background: #0a3b6e; box-shadow: 0 4px 14px rgba(15,76,129,0.4); }
+
+.btn-gold { background: var(--gold); color: white; }
+.btn-gold:hover { background: #b45309; }
+
+.btn-ghost { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); }
+.btn-ghost:hover { background: rgba(255,255,255,0.25); }
+
+.btn-soft { background: var(--canvas); color: var(--ink-mid); border: 1.5px solid var(--edge); }
+.btn-soft:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-danger { background: var(--ruby); color: white; }
+.btn-danger:hover { background: #b91c1c; }
+
+.btn-success { background: var(--emerald); color: white; }
+.btn-success:hover { background: #047857; }
+
+.btn-sm { padding: 6px 13px; font-size: 12px; border-radius: 7px; }
+.btn-lg { padding: 14px 28px; font-size: 15px; font-weight: 700; border-radius: 10px; }
+.btn-block { width: 100%; justify-content: center; }
+
+/* ── FORMS ── */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--ink-soft);
+  margin-bottom: 5px;
+}
+
+.form-label.req::after { content: ' *'; color: var(--ruby); }
+
+.input {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid var(--edge-dark);
+  border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  background: white;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+textarea.input { resize: vertical; min-height: 80px; }
+select.input { cursor: pointer; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* Inline add rows */
+.add-row { display: flex; gap: 7px; margin-top: 8px; }
+.add-input { flex: 1; padding: 8px 12px; border: 1.5px solid var(--edge-dark); border-radius: 7px; font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none; }
+.add-input:focus { border-color: var(--accent); }
+
+.editable-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 7px;
+  border: 1.5px solid var(--edge);
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.remove-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.12s;
+}
+
+.remove-btn:hover { color: var(--ruby); }
+
+/* ── MODAL ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10,20,40,0.55);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 500;
+  padding: 24px 16px 40px;
+  overflow-y: auto;
+}
+
+.overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: white;
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 680px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.25s ease;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+.modal-hdr {
+  background: linear-gradient(135deg, var(--accent), #0a3260);
+  color: white;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+.x-btn { background: none; border: none; color: rgba(255,255,255,0.7); font-size: 22px; cursor: pointer; line-height: 1; transition: color 0.12s; }
+.x-btn:hover { color: white; }
+
+.modal-body { padding: 22px; max-height: 75vh; overflow-y: auto; }
+
+.modal-footer {
+  padding: 16px 22px;
+  border-top: 1px solid var(--edge);
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+/* ══════════════════════════════
+   CREW / MOBILE VIEW
+══════════════════════════════ */
+#view-crew {
+  background: var(--canvas);
+}
+
+.crew-list-screen { display: flex; flex-direction: column; }
+.crew-hero {
+  background: linear-gradient(160deg, var(--accent) 0%, #0a3260 100%);
+  padding: 26px 18px 32px;
+  color: white;
+}
+
+.crew-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.crew-h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  margin-bottom: 18px;
+  line-height: 1.15;
+}
+
+.crew-search-wrap { position: relative; }
+.crew-search-ico { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; }
+.crew-search {
+  width: 100%;
+  padding: 12px 14px 12px 38px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  outline: none;
+}
+.crew-search::placeholder { color: rgba(255,255,255,0.5); }
+
+.crew-body {
+  background: var(--canvas);
+  border-radius: 22px 22px 0 0;
+  margin-top: -10px;
+  padding: 20px 14px;
+  flex: 1;
+}
+
+.crew-sub {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+}
+
+/* Crew work order card */
+.crew-card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 11px;
+  border: 1.5px solid var(--edge);
+  cursor: pointer;
+  transition: all 0.16s;
+  box-shadow: var(--shadow);
+}
+
+.crew-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--accent-mid); }
+
+.crew-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.crew-card-id { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: var(--accent); }
+.crew-card-cust { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.crew-card-addr { font-size: 13px; color: var(--ink-soft); margin-bottom: 10px; }
+.crew-card-foot { display: flex; align-items: center; justify-content: space-between; }
+.crew-card-date { font-size: 12px; color: var(--ink-faint); }
+.crew-card-arr { color: var(--ink-faint); font-size: 20px; }
+
+/* ── CREW DETAIL SCREEN ── */
+.crew-detail-screen { display: none; flex-direction: column; }
+.crew-detail-screen.open { display: flex; }
+
+.crew-detail-hero {
+  background: linear-gradient(160deg, var(--accent), #0a3260);
+  padding: 16px 16px 24px;
+  color: white;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 14px;
+}
+
+.cd-id { font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--gold); margin-bottom: 4px; font-family: 'Syne', sans-serif; }
+.cd-cust { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; margin-bottom: 3px; }
+.cd-addr { font-size: 13px; color: rgba(255,255,255,0.6); }
+
+.crew-detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  padding-bottom: 100px;
+}
+
+.crew-section {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--edge);
+  box-shadow: var(--shadow);
+}
+
+.crew-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: var(--ink-soft);
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--edge);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cd-desc { font-size: 15px; line-height: 1.65; color: var(--ink-mid); }
+.cd-meta { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+.cd-meta-item { font-size: 12px; color: var(--ink-soft); }
+.cd-meta-item strong { color: var(--ink); }
+
+.special-banner {
+  background: #fffbeb;
+  border: 1.5px solid #fbbf24;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-mid);
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Crew task */
+.ctask {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--canvas);
+}
+.ctask:last-child { border-bottom: none; }
+.ctask input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--emerald); cursor: pointer; margin-top: 1px; flex-shrink: 0; }
+.ctask-text { font-size: 15px; font-weight: 500; line-height: 1.4; }
+
+/* Time entry */
+.member-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--canvas);
+}
+.member-entry:last-child { border-bottom: none; }
+.member-name { flex: 1; font-size: 15px; font-weight: 600; color: var(--ink); }
+.hours-input-wrap { display: flex; align-items: center; gap: 6px; }
+.hours-input {
+  width: 72px;
+  padding: 9px 10px;
+  border: 1.5px solid var(--edge-dark);
+  border-radius: 9px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.hours-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.hours-lbl { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+
+.crew-total {
+  background: var(--ink);
+  color: white;
+  border-radius: 10px;
+  padding: 13px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.crew-total-lbl { font-size: 12px; font-weight: 600; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.6px; }
+.crew-total-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--gold); }
+
+/* Notes textarea */
+.crew-notes {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1.5px solid var(--edge-dark);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+}
+.crew-notes:focus { border-color: var(--accent); }
+
+/* Photo upload section crew */
+.photo-upload-zone {
+  border: 2px dashed var(--edge-dark);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.photo-upload-zone:hover { border-color: var(--accent); background: var(--accent-light); }
+.photo-upload-zone input { display: none; }
+.puz-icon { font-size: 28px; margin-bottom: 6px; }
+.puz-text { font-size: 14px; font-weight: 600; color: var(--ink-soft); }
+.puz-sub { font-size: 12px; color: var(--ink-faint); margin-top: 3px; }
+
+.crew-photo-preview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.crew-photo-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.crew-photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.crew-photo-del {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  background: rgba(0,0,0,0.65);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 13px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+/* Sticky submit */
+.crew-submit-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 14px env(safe-area-inset-bottom);
+  background: white;
+  border-top: 1px solid var(--edge);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  z-index: 50;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink);
+  color: white;
+  padding: 13px 22px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 9000;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.28s cubic-bezier(.34,1.56,.64,1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.ok { background: var(--emerald); }
+.toast.err { background: var(--ruby); }
+
+/* ── PHOTO LIGHTBOX ── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: pointer;
+}
+
+.lightbox.open { display: flex; }
+.lightbox img { max-width: 95vw; max-height: 92vh; border-radius: 8px; object-fit: contain; }
+
+/* ── PRINT ── */
+@media print {
+  header, .wo-sidebar, .detail-band-right, .tab-strip, .crew-submit-bar { display: none !important; }
+  .office-shell { display: block; }
+  .detail-band { background: #111 !important; print-color-adjust: exact; }
+  .tab-pane { display: block !important; }
+  .office-main { padding: 0; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .info-block { grid-template-columns: 1fr 1fr; }
+  .form-row-3 { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 640px) {
+  .office-shell { flex-direction: column; }
+  .wo-sidebar { width: 100%; height: 200px; min-width: unset; border-right: none; border-bottom: 1px solid var(--edge); }
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 9px; }
+  .info-block { grid-template-columns: 1fr; }
+  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .seg-btn { padding: 5px 10px; font-size: 12px; }
+  .role-pill { display: none; }
+  .crew-total-val { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">📋</div>
+    CCD <em>Work Order</em>
+  </div>
+  <div class="hdr-right">
+    <div class="seg-control">
+      <button class="seg-btn active" onclick="switchMode('office')" id="btn-office">🖥 Office</button>
+      <button class="seg-btn" onclick="switchMode('crew')" id="btn-crew">📱 Crew</button>
+    </div>
+    <div class="role-pill" id="role-pill"><div class="role-dot"></div><span id="role-label">Office</span></div>
+  </div>
+</header>
+
+<!-- ═══ OFFICE VIEW ═══ -->
+<div class="view active" id="view-office">
+  <div class="office-shell">
+
+    <!-- Sidebar -->
+    <aside class="wo-sidebar">
+      <div class="sb-top">
+        <div class="sb-heading">
+          <span class="sb-title">Work Orders</span>
+          <button class="btn btn-primary btn-sm" onclick="openNewModal()">＋ New</button>
+        </div>
+        <input class="input" placeholder="🔍 Search..." oninput="filterSidebar(this.value)" id="sb-search" style="margin:0;">
+      </div>
+      <div class="sb-scroll" id="sb-list"></div>
+    </aside>
+
+    <!-- Main -->
+    <main class="office-main" id="office-main">
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-tile t-all">
+          <div class="stat-n" id="s-total">0</div>
+          <div class="stat-lbl">All Orders</div>
+        </div>
+        <div class="stat-tile t-pending">
+          <div class="stat-n" id="s-pending">0</div>
+          <div class="stat-lbl">Pending</div>
+        </div>
+        <div class="stat-tile t-active">
+          <div class="stat-n" id="s-active">0</div>
+          <div class="stat-lbl">In Progress</div>
+        </div>
+        <div class="stat-tile t-done">
+          <div class="stat-n" id="s-done">0</div>
+          <div class="stat-lbl">Completed</div>
+        </div>
+      </div>
+
+      <!-- Welcome / empty -->
+      <div class="welcome-state" id="welcome">
+        <div class="welcome-icon">📋</div>
+        <div class="welcome-h">Select a Work Order</div>
+        <div class="welcome-p">Choose one from the sidebar or create a new one to get started.</div>
+      </div>
+
+      <!-- Detail -->
+      <div id="detail-wrap" style="display:none;">
+        <div class="detail-card">
+          <div class="detail-band">
+            <div class="detail-band-left">
+              <div class="detail-id" id="d-id"></div>
+              <div class="detail-cust" id="d-cust"></div>
+              <div class="detail-addr" id="d-addr"></div>
+            </div>
+            <div class="detail-band-right">
+              <div id="d-badge"></div>
+              <div class="detail-actions">
+                <button class="btn btn-ghost btn-sm" onclick="printWO()">🖨 Print</button>
+                <button class="btn btn-gold btn-sm" onclick="openEditModal()">✏ Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteWO()">🗑</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="tab-strip">
+            <button class="tab-item active" onclick="showTab('info', this)">📄 Details</button>
+            <button class="tab-item" onclick="showTab('tasks', this)">✅ Tasks</button>
+            <button class="tab-item" onclick="showTab('mats', this)">🔧 Materials</button>
+            <button class="tab-item" onclick="showTab('photos', this)">📷 Photos</button>
+            <button class="tab-item" onclick="showTab('time', this)">⏱ Time</button>
+          </div>
+
+          <!-- Info Tab -->
+          <div class="tab-pane active" id="tab-info">
+            <div class="info-block">
+              <div class="info-field"><label>Phone</label><p id="d-phone">—</p></div>
+              <div class="info-field"><label>Crew Lead</label><p id="d-lead">—</p></div>
+              <div class="info-field"><label>Crew Members</label><p id="d-members">—</p></div>
+              <div class="info-field"><label>Scheduled</label><p id="d-sched">—</p></div>
+              <div class="info-field"><label>Priority</label><p id="d-priority">—</p></div>
+              <div class="info-field"><label>Service Type</label><p id="d-type">—</p></div>
+            </div>
+            <div class="pane-section">Description</div>
+            <div class="desc-box" id="d-desc"></div>
+            <div id="d-special-wrap" style="margin-top:14px;display:none;">
+              <div class="pane-section">Special Instructions</div>
+              <div class="special-box"><span class="special-icon">⚠️</span><span id="d-special"></span></div>
+            </div>
+            <div id="d-crewnote-wrap" style="display:none; margin-top:14px;">
+              <div class="pane-section">Crew Notes (submitted)</div>
+              <div class="crew-note-box" id="d-crewnote"></div>
+            </div>
+          </div>
+
+          <!-- Tasks Tab -->
+          <div class="tab-pane" id="tab-tasks">
+            <div id="d-tasks-list"></div>
+          </div>
+
+          <!-- Materials Tab -->
+          <div class="tab-pane" id="tab-mats">
+            <div id="d-mats-list"></div>
+          </div>
+
+          <!-- Photos Tab -->
+          <div class="tab-pane" id="tab-photos">
+            <div class="pane-section">Attached Photos</div>
+            <div id="d-photos-grid"></div>
+          </div>
+
+          <!-- Time Tab -->
+          <div class="tab-pane" id="tab-time">
+            <div id="d-time-content"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══ CREW VIEW ═══ -->
+<div class="view" id="view-crew">
+
+  <!-- List screen -->
+  <div class="crew-list-screen" id="crew-list">
+    <div class="crew-hero">
+      <div class="crew-eyebrow">CCD Work Order — Crew Portal</div>
+      <div class="crew-h1">Your Assignments</div>
+      <div class="crew-search-wrap">
+        <span class="crew-search-ico">🔍</span>
+        <input class="crew-search" placeholder="Search by customer or WO #..." oninput="filterCrew(this.value)">
+      </div>
+    </div>
+    <div class="crew-body">
+      <div class="crew-sub" id="crew-count-lbl">Active Work Orders</div>
+      <div id="crew-list-items"></div>
+    </div>
+  </div>
+
+  <!-- Detail screen -->
+  <div class="crew-detail-screen" id="crew-detail">
+    <div class="crew-detail-hero">
+      <button class="back-link" onclick="backToList()">← Back</button>
+      <div class="cd-id" id="cd-id"></div>
+      <div class="cd-cust" id="cd-cust"></div>
+      <div class="cd-addr" id="cd-addr"></div>
+    </div>
+
+    <div class="crew-detail-body">
+
+      <!-- Job Info -->
+      <div class="crew-section">
+        <div class="crew-section-title">📋 Job Description</div>
+        <div class="cd-desc" id="cd-desc"></div>
+        <div class="cd-meta">
+          <div class="cd-meta-item">📅 <strong id="cd-sched"></strong></div>
+          <div class="cd-meta-item">👷 <strong id="cd-lead"></strong></div>
+        </div>
+        <div class="special-banner" id="cd-special-banner" style="display:none;">
+          <span>⚠️</span><span id="cd-special"></span>
+        </div>
+      </div>
+
+      <!-- Tasks -->
+      <div class="crew-section" id="cd-tasks-section">
+        <div class="crew-section-title">✅ Tasks to Complete</div>
+        <div id="cd-tasks"></div>
+      </div>
+
+      <!-- Materials -->
+      <div class="crew-section" id="cd-mats-section">
+        <div class="crew-section-title">🔧 Materials & Parts</div>
+        <div id="cd-mats"></div>
+      </div>
+
+      <!-- Time Entry -->
+      <div class="crew-section">
+        <div class="crew-section-title">⏱ Record Hours</div>
+        <div id="cd-time-entries"></div>
+        <div class="crew-total" id="cd-total" style="display:none;">
+          <span class="crew-total-lbl">Total Hours</span>
+          <span class="crew-total-val" id="cd-total-val">0.0</span>
+        </div>
+      </div>
+
+      <!-- Photos -->
+      <div class="crew-section">
+        <div class="crew-section-title">📷 Attach Photos</div>
+        <label class="photo-upload-zone" onclick="triggerPhotoUpload()">
+          <input type="file" id="crew-photo-input" accept="image/*" multiple onchange="handlePhotoUpload(event)">
+          <div class="puz-icon">📸</div>
+          <div class="puz-text">Tap to add photos</div>
+          <div class="puz-sub">Capture from camera or select from library</div>
+        </label>
+        <div class="crew-photo-preview" id="crew-photo-preview"></div>
+      </div>
+
+      <!-- Notes -->
+      <div class="crew-section">
+        <div class="crew-section-title">📝 Crew Notes</div>
+        <textarea class="crew-notes" id="cd-notes" placeholder="Add notes about the job, issues encountered, additional work needed..."></textarea>
+      </div>
+
+    </div>
+
+    <div class="crew-submit-bar">
+      <button class="btn btn-success btn-lg btn-block" onclick="submitTime()">✓ &nbsp; Submit Time Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NEW/EDIT MODAL ═══ -->
+<div class="overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="modal-title">New Work Order</span>
+      <button class="x-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label req">Customer Name</label>
+          <input class="input" id="f-cust" placeholder="Jane Smith">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input class="input" id="f-phone" placeholder="(555) 000-0000">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label req">Service Address</label>
+        <input class="input" id="f-addr" placeholder="123 Main St, City, State 00000">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Service Type</label>
+          <input class="input" id="f-type" placeholder="e.g. Repair, Installation, Inspection">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select class="input" id="f-priority">
+            <option>Normal</option>
+            <option>High</option>
+            <option>Urgent</option>
+            <option>Low</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Crew Lead</label>
+          <input class="input" id="f-lead" placeholder="Lead technician name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Crew Members</label>
+          <input class="input" id="f-members" placeholder="John, Maria, Carlos (comma separated)">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Scheduled Date</label>
+          <input class="input" type="date" id="f-date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="input" id="f-status">
+            <option value="pending">Pending</option>
+            <option value="progress">In Progress</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label req">Job Description</label>
+        <textarea class="input" id="f-desc" placeholder="Describe the work to be performed..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">⚠️ Special Instructions</label>
+        <textarea class="input" id="f-special" placeholder="Gate codes, pets on property, hazards, customer preferences..." style="min-height:66px;"></textarea>
+      </div>
+
+      <!-- Tasks editor -->
+      <div class="form-group">
+        <label class="form-label">Tasks / Work Items</label>
+        <div id="f-tasks-list"></div>
+        <div class="add-row">
+          <input class="add-input" id="f-task-input" placeholder="Add a task… press Enter" onkeydown="if(event.key==='Enter'){addFormTask();event.preventDefault();}">
+          <button class="btn btn-soft btn-sm" onclick="addFormTask()">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Materials editor -->
+      <div class="form-group">
+        <label class="form-label">Materials / Parts</label>
+        <div id="f-mats-list"></div>
+        <div class="add-row">
+          <input class="add-input" id="f-mat-qty" placeholder="Qty" type="number" min="1" style="width:64px;flex-shrink:0;">
+          <input class="add-input" id="f-mat-name" placeholder="Item name…" onkeydown="if(event.key==='Enter'){addFormMat();event.preventDefault();}">
+          <input class="add-input" id="f-mat-unit" placeholder="Unit" style="width:72px;flex-shrink:0;">
+          <button class="btn btn-soft btn-sm" onclick="addFormMat()" style="flex-shrink:0;">+ Add</button>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-soft" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn" onclick="saveWO()">Create Work Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('open')">
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════
+   DATA
+══════════════════════════════ */
+let db = [
+  {
+    id:'WO-1001', customer:'Henderson Residence', phone:'(555) 214-8831', address:'412 Birchwood Lane, Maplewood',
+    type:'Plumbing Repair', priority:'High', lead:'Marco Reyes', members:['Marco Reyes','Dana Kim'],
+    date:'2026-02-18', status:'pending',
+    desc:'Repair burst pipe under kitchen sink. Check pressure regulator and inspect adjacent copper lines for corrosion. Customer reports intermittent hot water loss.',
+    special:'Dog in backyard — keep gate closed. Customer will not be home; key under front mat.',
+    tasks:['Shut off water main','Locate and cut burst section','Install new copper coupling','Check pressure regulator','Restore water and test for leaks','Clean up work area'],
+    materials:[{qty:2,name:'Copper Coupling ¾"',unit:'ea'},{qty:1,name:'Pipe Cutter',unit:'ea'},{qty:1,name:'Teflon Tape',unit:'roll'}],
+    photos:[], timeRecords:[], crewNotes:''
+  },
+  {
+    id:'WO-1002', customer:'Silverstone Office Park', phone:'(555) 776-0042', address:'88 Commerce Dr, Suite 200',
+    type:'HVAC Service', priority:'Normal', lead:'Tasha Brooks', members:['Tasha Brooks','Felix Ortega','Sam Park'],
+    date:'2026-02-17', status:'progress',
+    desc:'Quarterly HVAC service for all 6 rooftop units. Replace filters, check refrigerant levels, clean coils, and test thermostat operation in all suites.',
+    special:'Must check in with building security at front desk. Hard hats required on roof.',
+    tasks:['Check in with building security','Replace all unit filters (6x)','Test refrigerant levels','Clean evaporator coils','Calibrate thermostats','Log all unit serial numbers'],
+    materials:[{qty:6,name:'20x20x4 Filter',unit:'ea'},{qty:1,name:'Refrigerant R-410A',unit:'lbs'},{qty:1,name:'Coil Cleaner',unit:'can'}],
+    photos:[], timeRecords:[], crewNotes:''
+  },
+  {
+    id:'WO-1003', customer:'Greenway Community Pool', phone:'(555) 394-5511', address:'1 Park Circle, Greenway',
+    type:'Electrical Inspection', priority:'Urgent', lead:'Doug Warren', members:['Doug Warren','Priya Shah','Luis Mendez','Nat Chen'],
+    date:'2026-02-12', status:'done',
+    desc:'Annual electrical safety inspection of pool equipment room. Test all GFCI outlets, inspect pump motor wiring, check bonding and grounding on all metal fixtures.',
+    special:'Pool manager Jenna (ext. 4) must be present during inspection. Do not enter pump room without notification.',
+    tasks:['Meet with pool manager Jenna','Test all GFCI outlets (12)','Inspect pump motor wiring','Check bonding on all metal fixtures','Verify grounding system','Complete inspection report'],
+    materials:[{qty:3,name:'GFCI Outlet Replacement',unit:'ea'},{qty:1,name:'Grounding Wire 10AWG',unit:'ft'}],
+    photos:[],
+    timeRecords:[
+      {member:'Doug Warren',hours:5.5},{member:'Priya Shah',hours:5.0},{member:'Luis Mendez',hours:4.5},{member:'Nat Chen',hours:5.0}
+    ],
+    crewNotes:'3 GFCI outlets failed testing and were replaced. Main bonding connection was corroded — cleaned and retightened. Recommend full rewire of pump panel within 12 months. Inspection report signed by Jenna at completion.'
+  }
+];
+
+let selectedId = null;
+let editId = null;
+let formTasks = [];
+let formMats = [];
+let crewPhotos = [];
+let mode = 'office';
+
+/* ══════════════════════════════
+   INIT
+══════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f-date').value = today();
+  renderSidebar();
+  renderCrewList();
+  updateStats();
+});
+
+/* ══════════════════════════════
+   HELPERS
+══════════════════════════════ */
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function fmtDate(s) {
+  if (!s) return '—';
+  const d = new Date(s + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+function statusBadge(st) {
+  const map = {
+    pending: ['badge-pending','Pending'],
+    progress: ['badge-progress','In Progress'],
+    done: ['badge-done','Completed'],
+    logged: ['badge-logged','Time Logged']
+  };
+  const [cls, lbl] = map[st] || ['badge-logged', st];
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = (type==='ok'?'✓  ':type==='err'?'⚠  ':'')+msg;
+  t.className = `toast show${type?' '+type:''}`;
+  setTimeout(()=>t.className='toast', 3200);
+}
+
+function switchMode(m) {
+  mode = m;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+m).classList.add('active');
+  document.getElementById('btn-'+m).classList.add('active');
+  document.getElementById('role-label').textContent = m==='office'?'Office':'Crew Portal';
+  if (m==='crew') renderCrewList();
+  else { renderSidebar(); updateStats(); }
+}
+
+/* ══════════════════════════════
+   STATS
+══════════════════════════════ */
+function updateStats() {
+  document.getElementById('s-total').textContent = db.length;
+  document.getElementById('s-pending').textContent = db.filter(w=>w.status==='pending').length;
+  document.getElementById('s-active').textContent = db.filter(w=>w.status==='progress').length;
+  document.getElementById('s-done').textContent = db.filter(w=>w.status==='done'||w.status==='logged').length;
+}
+
+/* ══════════════════════════════
+   SIDEBAR
+══════════════════════════════ */
+function renderSidebar(q='') {
+  const list = document.getElementById('sb-list');
+  const items = q ? db.filter(w=>
+    w.id.toLowerCase().includes(q.toLowerCase())||
+    w.customer.toLowerCase().includes(q.toLowerCase())||
+    w.address.toLowerCase().includes(q.toLowerCase())
+  ) : db;
+
+  if (!items.length) {
+    list.innerHTML = `<div style="padding:30px;text-align:center;color:var(--ink-faint);font-size:13px;">No results found</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(w => `
+    <div class="wo-row${selectedId===w.id?' active':''}" onclick="selectWO('${w.id}')">
+      <div class="wo-row-top">
+        <span class="wo-id">${w.id}</span>
+        ${statusBadge(w.status)}
+      </div>
+      <div class="wo-cust">${w.customer}</div>
+      <div class="wo-meta">
+        <span>📅 ${fmtDate(w.date)}</span>
+        <span>· ${w.lead||'Unassigned'}</span>
+      </div>
+    </div>`).join('');
+}
+
+function filterSidebar(q) { renderSidebar(q); }
+
+/* ══════════════════════════════
+   OFFICE DETAIL
+══════════════════════════════ */
+function selectWO(id) {
+  selectedId = id;
+  const w = db.find(x=>x.id===id);
+  if (!w) return;
+
+  renderSidebar(document.getElementById('sb-search').value);
+  document.getElementById('welcome').style.display = 'none';
+  document.getElementById('detail-wrap').style.display = 'block';
+
+  // Band
+  document.getElementById('d-id').textContent = w.id;
+  document.getElementById('d-cust').textContent = w.customer;
+  document.getElementById('d-addr').textContent = w.address;
+  document.getElementById('d-badge').innerHTML = statusBadge(w.status);
+
+  // Info fields
+  document.getElementById('d-phone').textContent = w.phone||'—';
+  document.getElementById('d-lead').textContent = w.lead||'—';
+  document.getElementById('d-members').textContent = w.members.join(', ')||'—';
+  document.getElementById('d-sched').textContent = fmtDate(w.date);
+  document.getElementById('d-priority').textContent = w.priority;
+  document.getElementById('d-type').textContent = w.type||'—';
+  document.getElementById('d-desc').textContent = w.desc;
+
+  // Special instructions
+  const specWrap = document.getElementById('d-special-wrap');
+  if (w.special && w.special.trim()) {
+    specWrap.style.display='block';
+    document.getElementById('d-special').textContent = w.special;
+  } else { specWrap.style.display='none'; }
+
+  // Crew notes
+  const cnWrap = document.getElementById('d-crewnote-wrap');
+  if (w.crewNotes) { cnWrap.style.display='block'; document.getElementById('d-crewnote').textContent=w.crewNotes; }
+  else cnWrap.style.display='none';
+
+  // Tasks
+  const tl = document.getElementById('d-tasks-list');
+  tl.innerHTML = w.tasks.length
+    ? w.tasks.map(t=>`<div class="task-line"><input type="checkbox" class="task-check" disabled><span>${t}</span></div>`).join('')
+    : `<p style="color:var(--ink-soft);font-size:14px;">No tasks listed.</p>`;
+
+  // Materials
+  const ml = document.getElementById('d-mats-list');
+  ml.innerHTML = w.materials.length
+    ? w.materials.map(m=>`<div class="mat-row"><span class="mat-qty">${m.qty}</span><span class="mat-name">${m.name}</span><span class="mat-unit">${m.unit||''}</span></div>`).join('')
+    : `<p style="color:var(--ink-soft);font-size:14px;">No materials listed.</p>`;
+
+  // Photos
+  renderOfficePhotos(w);
+
+  // Time
+  renderOfficeTime(w);
+
+  // Reset to first tab
+  showTab('info', document.querySelector('.tab-item'));
+}
+
+function renderOfficePhotos(w) {
+  const grid = document.getElementById('d-photos-grid');
+  if (!w.photos.length) {
+    grid.innerHTML = `<div style="color:var(--ink-soft);font-size:14px;padding:10px 0;">No photos attached yet. Crews can submit photos from the mobile view.</div>`;
+    return;
+  }
+  grid.innerHTML = `<div class="photo-grid">${w.photos.map(src=>`<img class="photo-thumb" src="${src}" onclick="openLightbox(this.src)">`).join('')}</div>`;
+}
+
+function renderOfficeTime(w) {
+  const el = document.getElementById('d-time-content');
+  if (!w.timeRecords.length) {
+    el.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--ink-soft);font-size:14px;">⏱ No time recorded yet.<br><span style="font-size:12px;color:var(--ink-faint);">Time appears here once the crew submits it.</span></div>`;
+    return;
+  }
+  const total = w.timeRecords.reduce((s,r)=>s+r.hours,0);
+  el.innerHTML = `
+    <div class="time-header"><div>Crew Member</div><div>Date</div><div>Hours</div></div>
+    ${w.timeRecords.map(r=>`
+      <div class="time-row">
+        <div class="time-member">👷 ${r.member}</div>
+        <div class="time-date">${r.date ? fmtDate(r.date) : '—'}</div>
+        <div><span class="time-chip">${r.hours.toFixed(1)}</span></div>
+      </div>`).join('')}
+    <div class="time-total-bar">
+      <span class="time-total-lbl">Total Crew Hours</span>
+      <span class="time-total-val">${total.toFixed(1)} hrs</span>
+    </div>`;
+}
+
+function showTab(tab, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  // find right button
+  document.querySelectorAll('.tab-item').forEach(b=>{
+    const match = {info:'Detail',tasks:'Task',mats:'Material',photos:'Photo',time:'Time'};
+    if (b.textContent.includes(match[tab])) b.classList.add('active');
+  });
+}
+
+/* ══════════════════════════════
+   CREATE / EDIT MODAL
+══════════════════════════════ */
+function openNewModal() {
+  editId = null;
+  formTasks = [];
+  formMats = [];
+  clearForm();
+  document.getElementById('modal-title').textContent = 'New Work Order';
+  document.getElementById('modal-save-btn').textContent = 'Create Work Order';
+  document.getElementById('f-date').value = today();
+  document.getElementById('f-status').value = 'pending';
+  renderFormTasks();
+  renderFormMats();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openEditModal() {
+  const w = db.find(x=>x.id===selectedId);
+  if (!w) return;
+  editId = w.id;
+  formTasks = [...w.tasks];
+  formMats = w.materials.map(m=>({...m}));
+  document.getElementById('f-cust').value = w.customer;
+  document.getElementById('f-phone').value = w.phone||'';
+  document.getElementById('f-addr').value = w.address;
+  document.getElementById('f-type').value = w.type||'';
+  document.getElementById('f-priority').value = w.priority;
+  document.getElementById('f-lead').value = w.lead||'';
+  document.getElementById('f-members').value = w.members.join(', ');
+  document.getElementById('f-date').value = w.date;
+  document.getElementById('f-status').value = w.status==='done'||w.status==='logged'?'pending':w.status;
+  document.getElementById('f-desc').value = w.desc;
+  document.getElementById('f-special').value = w.special||'';
+  renderFormTasks();
+  renderFormMats();
+  document.getElementById('modal-title').textContent = 'Edit Work Order';
+  document.getElementById('modal-save-btn').textContent = 'Save Changes';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function clearForm() {
+  ['f-cust','f-phone','f-addr','f-type','f-lead','f-members','f-desc','f-special']
+    .forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-priority').value='Normal';
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function saveWO() {
+  const cust = document.getElementById('f-cust').value.trim();
+  const addr = document.getElementById('f-addr').value.trim();
+  const desc = document.getElementById('f-desc').value.trim();
+  if (!cust||!addr||!desc) { toast('Please fill all required fields.','err'); return; }
+
+  const lead = document.getElementById('f-lead').value.trim();
+  const memberStr = document.getElementById('f-members').value;
+  const members = memberStr.split(',').map(s=>s.trim()).filter(Boolean);
+  if (lead && !members.includes(lead)) members.unshift(lead);
+
+  const data = {
+    customer: cust,
+    phone: document.getElementById('f-phone').value.trim(),
+    address: addr,
+    type: document.getElementById('f-type').value.trim(),
+    priority: document.getElementById('f-priority').value,
+    lead, members,
+    date: document.getElementById('f-date').value,
+    status: document.getElementById('f-status').value,
+    desc,
+    special: document.getElementById('f-special').value.trim(),
+    tasks: [...formTasks],
+    materials: formMats.map(m=>({...m}))
+  };
+
+  if (editId) {
+    const idx = db.findIndex(x=>x.id===editId);
+    db[idx] = {...db[idx], ...data};
+    toast('Work order updated!','ok');
+    closeModal();
+    renderSidebar(document.getElementById('sb-search').value);
+    updateStats();
+    selectWO(editId);
+  } else {
+    const newId = 'WO-' + (1000 + db.length + 1);
+    db.push({ id:newId, ...data, photos:[], timeRecords:[], crewNotes:'' });
+    toast('Work order created!','ok');
+    closeModal();
+    renderSidebar();
+    updateStats();
+    selectWO(newId);
+  }
+}
+
+function deleteWO() {
+  const w = db.find(x=>x.id===selectedId);
+  if (!w) return;
+  if (!confirm(`Delete ${w.id} — ${w.customer}?\n\nThis cannot be undone.`)) return;
+  db = db.filter(x=>x.id!==selectedId);
+  selectedId = null;
+  document.getElementById('detail-wrap').style.display='none';
+  document.getElementById('welcome').style.display='block';
+  renderSidebar();
+  renderCrewList();
+  updateStats();
+  toast('Work order deleted.','ok');
+}
+
+// Form tasks
+function renderFormTasks() {
+  const el = document.getElementById('f-tasks-list');
+  el.innerHTML = formTasks.map((t,i)=>`
+    <div class="editable-item">
+      <span>☐</span><span style="flex:1">${t}</span>
+      <button class="remove-btn" onclick="removeFormTask(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addFormTask() {
+  const inp = document.getElementById('f-task-input');
+  const v = inp.value.trim();
+  if (!v) return;
+  formTasks.push(v);
+  inp.value='';
+  renderFormTasks();
+}
+
+function removeFormTask(i) { formTasks.splice(i,1); renderFormTasks(); }
+
+// Form mats
+function renderFormMats() {
+  const el = document.getElementById('f-mats-list');
+  el.innerHTML = formMats.map((m,i)=>`
+    <div class="editable-item">
+      <span class="mat-qty" style="font-size:12px;padding:2px 7px;">${m.qty}</span>
+      <span style="flex:1">${m.name}</span>
+      <span class="mat-unit">${m.unit||''}</span>
+      <button class="remove-btn" onclick="removeFormMat(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addFormMat() {
+  const qty = parseFloat(document.getElementById('f-mat-qty').value)||1;
+  const name = document.getElementById('f-mat-name').value.trim();
+  const unit = document.getElementById('f-mat-unit').value.trim();
+  if (!name) return;
+  formMats.push({qty,name,unit});
+  document.getElementById('f-mat-qty').value='';
+  document.getElementById('f-mat-name').value='';
+  document.getElementById('f-mat-unit').value='';
+  renderFormMats();
+}
+
+function removeFormMat(i) { formMats.splice(i,1); renderFormMats(); }
+
+/* ══════════════════════════════
+   CREW LIST
+══════════════════════════════ */
+function renderCrewList(q='') {
+  const el = document.getElementById('crew-list-items');
+  const lbl = document.getElementById('crew-count-lbl');
+
+  const active = db.filter(w => w.status!=='logged' &&
+    (w.id.toLowerCase().includes(q.toLowerCase()) || w.customer.toLowerCase().includes(q.toLowerCase()))
+  );
+
+  lbl.textContent = `Active Work Orders (${active.length})`;
+
+  if (!active.length) {
+    el.innerHTML=`<div style="background:white;border-radius:14px;padding:48px 20px;text-align:center;">
+      <div style="font-size:40px;opacity:.3;margin-bottom:10px;">✅</div>
+      <div style="font-weight:700;color:var(--ink-soft);">All caught up!</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = active.map(w=>`
+    <div class="crew-card" onclick="openCrewDetail('${w.id}')">
+      <div class="crew-card-top">
+        <span class="crew-card-id">${w.id}</span>
+        ${statusBadge(w.status)}
+      </div>
+      <div class="crew-card-cust">${w.customer}</div>
+      <div class="crew-card-addr">📍 ${w.address}</div>
+      <div class="crew-card-foot">
+        <span class="crew-card-date">📅 ${fmtDate(w.date)} &nbsp;· ${w.lead}</span>
+        <span class="crew-card-arr">›</span>
+      </div>
+    </div>`).join('');
+}
+
+function filterCrew(q) { renderCrewList(q); }
+
+/* ══════════════════════════════
+   CREW DETAIL
+══════════════════════════════ */
+let crewWO = null;
+
+function openCrewDetail(id) {
+  crewWO = db.find(x=>x.id===id);
+  if (!crewWO) return;
+
+  crewPhotos = [];
+  document.getElementById('crew-photo-preview').innerHTML='';
+
+  document.getElementById('cd-id').textContent = crewWO.id;
+  document.getElementById('cd-cust').textContent = crewWO.customer;
+  document.getElementById('cd-addr').textContent = crewWO.address;
+  document.getElementById('cd-desc').textContent = crewWO.desc;
+  document.getElementById('cd-sched').textContent = fmtDate(crewWO.date);
+  document.getElementById('cd-lead').textContent = crewWO.lead;
+  document.getElementById('cd-notes').value = crewWO.crewNotes||'';
+
+  // Special instructions
+  const sb = document.getElementById('cd-special-banner');
+  if (crewWO.special) {
+    sb.style.display='flex';
+    document.getElementById('cd-special').textContent = crewWO.special;
+  } else sb.style.display='none';
+
+  // Tasks
+  const ts = document.getElementById('cd-tasks-section');
+  const te = document.getElementById('cd-tasks');
+  if (crewWO.tasks.length) {
+    ts.style.display='block';
+    te.innerHTML = crewWO.tasks.map((t,i)=>`
+      <div class="ctask">
+        <input type="checkbox" id="ct-${i}">
+        <label for="ct-${i}" class="ctask-text">${t}</label>
+      </div>`).join('');
+  } else ts.style.display='none';
+
+  // Materials
+  const ms = document.getElementById('cd-mats-section');
+  const me = document.getElementById('cd-mats');
+  if (crewWO.materials.length) {
+    ms.style.display='block';
+    me.innerHTML = crewWO.materials.map(m=>`
+      <div class="mat-row">
+        <span class="mat-qty">${m.qty}</span>
+        <span class="mat-name">${m.name}</span>
+        <span class="mat-unit">${m.unit||''}</span>
+      </div>`).join('');
+  } else ms.style.display='none';
+
+  // Time entries
+  const mems = crewWO.members.length ? crewWO.members : (crewWO.lead?[crewWO.lead]:[]);
+  document.getElementById('cd-time-entries').innerHTML = mems.map(m=>`
+    <div class="member-entry">
+      <div class="member-name">👷 ${m}</div>
+      <div class="hours-input-wrap">
+        <input type="number" class="hours-input" data-member="${m}" min="0" max="24" step="0.5" placeholder="0" oninput="updateTotal()">
+        <span class="hours-lbl">hrs</span>
+      </div>
+    </div>`).join('');
+
+  // Prefill if already submitted
+  if (crewWO.timeRecords.length) {
+    crewWO.timeRecords.forEach(r=>{
+      const inp = document.querySelector(`#cd-time-entries [data-member="${r.member}"]`);
+      if (inp) inp.value = r.hours;
+    });
+    updateTotal();
+  }
+
+  document.getElementById('crew-list').style.display='none';
+  document.getElementById('crew-detail').classList.add('open');
+}
+
+function backToList() {
+  document.getElementById('crew-list').style.display='flex';
+  document.getElementById('crew-detail').classList.remove('open');
+  crewWO = null;
+}
+
+function updateTotal() {
+  const inputs = document.querySelectorAll('#cd-time-entries .hours-input');
+  let total = 0;
+  inputs.forEach(i=>total+=parseFloat(i.value)||0);
+  const bar = document.getElementById('cd-total');
+  if (total>0) { bar.style.display='flex'; document.getElementById('cd-total-val').textContent=total.toFixed(1); }
+  else bar.style.display='none';
+}
+
+/* ══════════════════════════════
+   PHOTO UPLOAD
+══════════════════════════════ */
+function triggerPhotoUpload() {
+  document.getElementById('crew-photo-input').click();
+}
+
+function handlePhotoUpload(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      crewPhotos.push(ev.target.result);
+      renderCrewPhotos();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value='';
+}
+
+function renderCrewPhotos() {
+  const el = document.getElementById('crew-photo-preview');
+  el.innerHTML = crewPhotos.map((src,i)=>`
+    <div class="crew-photo-item">
+      <img src="${src}">
+      <button class="crew-photo-del" onclick="removeCrewPhoto(${i})">✕</button>
+    </div>`).join('');
+}
+
+function removeCrewPhoto(i) {
+  crewPhotos.splice(i,1);
+  renderCrewPhotos();
+}
+
+/* ══════════════════════════════
+   SUBMIT TIME
+══════════════════════════════ */
+function submitTime() {
+  if (!crewWO) return;
+  const inputs = document.querySelectorAll('#cd-time-entries .hours-input');
+  const records = [];
+  const todayStr = today();
+
+  inputs.forEach(inp=>{
+    const hrs = parseFloat(inp.value);
+    if (hrs>0) records.push({member:inp.dataset.member, hours:hrs, date:todayStr});
+  });
+
+  if (!records.length) { toast('Please enter hours for at least one crew member.','err'); return; }
+
+  crewWO.timeRecords = records;
+  crewWO.crewNotes = document.getElementById('cd-notes').value.trim();
+  crewWO.status = 'logged';
+  if (crewPhotos.length) crewWO.photos = [...crewWO.photos, ...crewPhotos];
+
+  toast('Time record submitted! ✓','ok');
+  renderCrewList();
+  renderSidebar();
+  updateStats();
+
+  // Refresh office detail if same WO is open
+  if (selectedId===crewWO.id) selectWO(crewWO.id);
+
+  setTimeout(()=>backToList(), 1400);
+}
+
+/* ══════════════════════════════
+   LIGHTBOX
+══════════════════════════════ */
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+
+/* ══════════════════════════════
+   PRINT
+══════════════════════════════ */
+function printWO() { window.print(); }
+
+/* ── Modal overlay close ── */
+document.getElementById('modal-overlay').addEventListener('click', function(e){
+  if (e.target===this) closeModal();
+});
+</script>
+</body>
+</html>
