@@ -1215,7 +1215,7 @@ select.input { cursor: pointer; }
   <!-- List screen -->
   <div class="crew-list-screen" id="crew-list">
     <div class="crew-hero">
-      <div class="crew-eyebrow">CCD Work Order — Crew Portal</div>
+      <div class="crew-eyebrow">CCD Office Solutions — Crew Portal</div>
       <div class="crew-h1">Your Assignments</div>
       <div class="crew-search-wrap">
         <span class="crew-search-ico">🔍</span>
@@ -1412,617 +1412,628 @@ select.input { cursor: pointer; }
 </div>
 
 <!-- Toast -->
-<div class="toast" id="toast"></div>
 
-<script>
-/* ══════════════════════════════
-   DATA
-══════════════════════════════ */
-let db = [
-  {
-    id:'WO-1001', customer:'Henderson Residence', phone:'(555) 214-8831', address:'412 Birchwood Lane, Maplewood',
-    type:'Plumbing Repair', priority:'High', lead:'Marco Reyes', members:['Marco Reyes','Dana Kim'],
-    date:'2026-02-18', status:'pending',
-    desc:'Repair burst pipe under kitchen sink. Check pressure regulator and inspect adjacent copper lines for corrosion. Customer reports intermittent hot water loss.',
-    special:'Dog in backyard — keep gate closed. Customer will not be home; key under front mat.',
-    tasks:['Shut off water main','Locate and cut burst section','Install new copper coupling','Check pressure regulator','Restore water and test for leaks','Clean up work area'],
-    materials:[{qty:2,name:'Copper Coupling ¾"',unit:'ea'},{qty:1,name:'Pipe Cutter',unit:'ea'},{qty:1,name:'Teflon Tape',unit:'roll'}],
-    photos:[], timeRecords:[], crewNotes:''
-  },
-  {
-    id:'WO-1002', customer:'Silverstone Office Park', phone:'(555) 776-0042', address:'88 Commerce Dr, Suite 200',
-    type:'HVAC Service', priority:'Normal', lead:'Tasha Brooks', members:['Tasha Brooks','Felix Ortega','Sam Park'],
-    date:'2026-02-17', status:'progress',
-    desc:'Quarterly HVAC service for all 6 rooftop units. Replace filters, check refrigerant levels, clean coils, and test thermostat operation in all suites.',
-    special:'Must check in with building security at front desk. Hard hats required on roof.',
-    tasks:['Check in with building security','Replace all unit filters (6x)','Test refrigerant levels','Clean evaporator coils','Calibrate thermostats','Log all unit serial numbers'],
-    materials:[{qty:6,name:'20x20x4 Filter',unit:'ea'},{qty:1,name:'Refrigerant R-410A',unit:'lbs'},{qty:1,name:'Coil Cleaner',unit:'can'}],
-    photos:[], timeRecords:[], crewNotes:''
-  },
-  {
-    id:'WO-1003', customer:'Greenway Community Pool', phone:'(555) 394-5511', address:'1 Park Circle, Greenway',
-    type:'Electrical Inspection', priority:'Urgent', lead:'Doug Warren', members:['Doug Warren','Priya Shah','Luis Mendez','Nat Chen'],
-    date:'2026-02-12', status:'done',
-    desc:'Annual electrical safety inspection of pool equipment room. Test all GFCI outlets, inspect pump motor wiring, check bonding and grounding on all metal fixtures.',
-    special:'Pool manager Jenna (ext. 4) must be present during inspection. Do not enter pump room without notification.',
-    tasks:['Meet with pool manager Jenna','Test all GFCI outlets (12)','Inspect pump motor wiring','Check bonding on all metal fixtures','Verify grounding system','Complete inspection report'],
-    materials:[{qty:3,name:'GFCI Outlet Replacement',unit:'ea'},{qty:1,name:'Grounding Wire 10AWG',unit:'ft'}],
-    photos:[],
-    timeRecords:[
-      {member:'Doug Warren',hours:5.5},{member:'Priya Shah',hours:5.0},{member:'Luis Mendez',hours:4.5},{member:'Nat Chen',hours:5.0}
-    ],
-    crewNotes:'3 GFCI outlets failed testing and were replaced. Main bonding connection was corroded — cleaned and retightened. Recommend full rewire of pump panel within 12 months. Inspection report signed by Jenna at completion.'
-  }
-];
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, doc, onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-let selectedId = null;
-let editId = null;
-let formTasks = [];
-let formMats = [];
-let crewPhotos = [];
-let mode = 'office';
-
-/* ══════════════════════════════
-   INIT
-══════════════════════════════ */
-window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('f-date').value = today();
-  renderSidebar();
-  renderCrewList();
-  updateStats();
-});
-
-/* ══════════════════════════════
-   HELPERS
-══════════════════════════════ */
-function today() { return new Date().toISOString().split('T')[0]; }
-
-function fmtDate(s) {
-  if (!s) return '—';
-  const d = new Date(s + 'T12:00:00');
-  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-}
-
-function statusBadge(st) {
-  const map = {
-    pending: ['badge-pending','Pending'],
-    progress: ['badge-progress','In Progress'],
-    done: ['badge-done','Completed'],
-    logged: ['badge-logged','Time Logged']
-  };
-  const [cls, lbl] = map[st] || ['badge-logged', st];
-  return `<span class="badge ${cls}">${lbl}</span>`;
-}
-
-function toast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = (type==='ok'?'✓  ':type==='err'?'⚠  ':'')+msg;
-  t.className = `toast show${type?' '+type:''}`;
-  setTimeout(()=>t.className='toast', 3200);
-}
-
-function switchMode(m) {
-  mode = m;
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('view-'+m).classList.add('active');
-  document.getElementById('btn-'+m).classList.add('active');
-  document.getElementById('role-label').textContent = m==='office'?'Office':'Crew Portal';
-  if (m==='crew') renderCrewList();
-  else { renderSidebar(); updateStats(); }
-}
-
-/* ══════════════════════════════
-   STATS
-══════════════════════════════ */
-function updateStats() {
-  document.getElementById('s-total').textContent = db.length;
-  document.getElementById('s-pending').textContent = db.filter(w=>w.status==='pending').length;
-  document.getElementById('s-active').textContent = db.filter(w=>w.status==='progress').length;
-  document.getElementById('s-done').textContent = db.filter(w=>w.status==='done'||w.status==='logged').length;
-}
-
-/* ══════════════════════════════
-   SIDEBAR
-══════════════════════════════ */
-function renderSidebar(q='') {
-  const list = document.getElementById('sb-list');
-  const items = q ? db.filter(w=>
-    w.id.toLowerCase().includes(q.toLowerCase())||
-    w.customer.toLowerCase().includes(q.toLowerCase())||
-    w.address.toLowerCase().includes(q.toLowerCase())
-  ) : db;
-
-  if (!items.length) {
-    list.innerHTML = `<div style="padding:30px;text-align:center;color:var(--ink-faint);font-size:13px;">No results found</div>`;
-    return;
-  }
-
-  list.innerHTML = items.map(w => `
-    <div class="wo-row${selectedId===w.id?' active':''}" onclick="selectWO('${w.id}')">
-      <div class="wo-row-top">
-        <span class="wo-id">${w.id}</span>
-        ${statusBadge(w.status)}
-      </div>
-      <div class="wo-cust">${w.customer}</div>
-      <div class="wo-meta">
-        <span>📅 ${fmtDate(w.date)}</span>
-        <span>· ${w.lead||'Unassigned'}</span>
-      </div>
-    </div>`).join('');
-}
-
-function filterSidebar(q) { renderSidebar(q); }
-
-/* ══════════════════════════════
-   OFFICE DETAIL
-══════════════════════════════ */
-function selectWO(id) {
-  selectedId = id;
-  const w = db.find(x=>x.id===id);
-  if (!w) return;
-
-  renderSidebar(document.getElementById('sb-search').value);
-  document.getElementById('welcome').style.display = 'none';
-  document.getElementById('detail-wrap').style.display = 'block';
-
-  // Band
-  document.getElementById('d-id').textContent = w.id;
-  document.getElementById('d-cust').textContent = w.customer;
-  document.getElementById('d-addr').textContent = w.address;
-  document.getElementById('d-badge').innerHTML = statusBadge(w.status);
-
-  // Info fields
-  document.getElementById('d-phone').textContent = w.phone||'—';
-  document.getElementById('d-lead').textContent = w.lead||'—';
-  document.getElementById('d-members').textContent = w.members.join(', ')||'—';
-  document.getElementById('d-sched').textContent = fmtDate(w.date);
-  document.getElementById('d-priority').textContent = w.priority;
-  document.getElementById('d-type').textContent = w.type||'—';
-  document.getElementById('d-desc').textContent = w.desc;
-
-  // Special instructions
-  const specWrap = document.getElementById('d-special-wrap');
-  if (w.special && w.special.trim()) {
-    specWrap.style.display='block';
-    document.getElementById('d-special').textContent = w.special;
-  } else { specWrap.style.display='none'; }
-
-  // Crew notes
-  const cnWrap = document.getElementById('d-crewnote-wrap');
-  if (w.crewNotes) { cnWrap.style.display='block'; document.getElementById('d-crewnote').textContent=w.crewNotes; }
-  else cnWrap.style.display='none';
-
-  // Tasks
-  const tl = document.getElementById('d-tasks-list');
-  tl.innerHTML = w.tasks.length
-    ? w.tasks.map(t=>`<div class="task-line"><input type="checkbox" class="task-check" disabled><span>${t}</span></div>`).join('')
-    : `<p style="color:var(--ink-soft);font-size:14px;">No tasks listed.</p>`;
-
-  // Materials
-  const ml = document.getElementById('d-mats-list');
-  ml.innerHTML = w.materials.length
-    ? w.materials.map(m=>`<div class="mat-row"><span class="mat-qty">${m.qty}</span><span class="mat-name">${m.name}</span><span class="mat-unit">${m.unit||''}</span></div>`).join('')
-    : `<p style="color:var(--ink-soft);font-size:14px;">No materials listed.</p>`;
-
-  // Photos
-  renderOfficePhotos(w);
-
-  // Time
-  renderOfficeTime(w);
-
-  // Reset to first tab
-  showTab('info', document.querySelector('.tab-item'));
-}
-
-function renderOfficePhotos(w) {
-  const grid = document.getElementById('d-photos-grid');
-  if (!w.photos.length) {
-    grid.innerHTML = `<div style="color:var(--ink-soft);font-size:14px;padding:10px 0;">No photos attached yet. Crews can submit photos from the mobile view.</div>`;
-    return;
-  }
-  grid.innerHTML = `<div class="photo-grid">${w.photos.map(src=>`<img class="photo-thumb" src="${src}" onclick="openLightbox(this.src)">`).join('')}</div>`;
-}
-
-function renderOfficeTime(w) {
-  const el = document.getElementById('d-time-content');
-  if (!w.timeRecords.length) {
-    el.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--ink-soft);font-size:14px;">⏱ No time recorded yet.<br><span style="font-size:12px;color:var(--ink-faint);">Time appears here once the crew submits it.</span></div>`;
-    return;
-  }
-  const total = w.timeRecords.reduce((s,r)=>s+r.hours,0);
-  el.innerHTML = `
-    <div class="time-header"><div>Crew Member</div><div>Date</div><div>Hours</div></div>
-    ${w.timeRecords.map(r=>`
-      <div class="time-row">
-        <div class="time-member">👷 ${r.member}</div>
-        <div class="time-date">${r.date ? fmtDate(r.date) : '—'}</div>
-        <div><span class="time-chip">${r.hours.toFixed(1)}</span></div>
-      </div>`).join('')}
-    <div class="time-total-bar">
-      <span class="time-total-lbl">Total Crew Hours</span>
-      <span class="time-total-val">${total.toFixed(1)} hrs</span>
-    </div>`;
-}
-
-function showTab(tab, btn) {
-  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab-item').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
-  // find right button
-  document.querySelectorAll('.tab-item').forEach(b=>{
-    const match = {info:'Detail',tasks:'Task',mats:'Material',photos:'Photo',time:'Time'};
-    if (b.textContent.includes(match[tab])) b.classList.add('active');
-  });
-}
-
-/* ══════════════════════════════
-   CREATE / EDIT MODAL
-══════════════════════════════ */
-function openNewModal() {
-  editId = null;
-  formTasks = [];
-  formMats = [];
-  clearForm();
-  document.getElementById('modal-title').textContent = 'New Work Order';
-  document.getElementById('modal-save-btn').textContent = 'Create Work Order';
-  document.getElementById('f-date').value = today();
-  document.getElementById('f-status').value = 'pending';
-  renderFormTasks();
-  renderFormMats();
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function openEditModal() {
-  const w = db.find(x=>x.id===selectedId);
-  if (!w) return;
-  editId = w.id;
-  formTasks = [...w.tasks];
-  formMats = w.materials.map(m=>({...m}));
-  document.getElementById('f-cust').value = w.customer;
-  document.getElementById('f-phone').value = w.phone||'';
-  document.getElementById('f-addr').value = w.address;
-  document.getElementById('f-type').value = w.type||'';
-  document.getElementById('f-priority').value = w.priority;
-  document.getElementById('f-lead').value = w.lead||'';
-  document.getElementById('f-members').value = w.members.join(', ');
-  document.getElementById('f-date').value = w.date;
-  document.getElementById('f-status').value = w.status==='done'||w.status==='logged'?'pending':w.status;
-  document.getElementById('f-desc').value = w.desc;
-  document.getElementById('f-special').value = w.special||'';
-  renderFormTasks();
-  renderFormMats();
-  document.getElementById('modal-title').textContent = 'Edit Work Order';
-  document.getElementById('modal-save-btn').textContent = 'Save Changes';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function clearForm() {
-  ['f-cust','f-phone','f-addr','f-type','f-lead','f-members','f-desc','f-special']
-    .forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-priority').value='Normal';
-}
-
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
-
-function saveWO() {
-  const cust = document.getElementById('f-cust').value.trim();
-  const addr = document.getElementById('f-addr').value.trim();
-  const desc = document.getElementById('f-desc').value.trim();
-  if (!cust||!addr||!desc) { toast('Please fill all required fields.','err'); return; }
-
-  const lead = document.getElementById('f-lead').value.trim();
-  const memberStr = document.getElementById('f-members').value;
-  const members = memberStr.split(',').map(s=>s.trim()).filter(Boolean);
-  if (lead && !members.includes(lead)) members.unshift(lead);
-
-  const data = {
-    customer: cust,
-    phone: document.getElementById('f-phone').value.trim(),
-    address: addr,
-    type: document.getElementById('f-type').value.trim(),
-    priority: document.getElementById('f-priority').value,
-    lead, members,
-    date: document.getElementById('f-date').value,
-    status: document.getElementById('f-status').value,
-    desc,
-    special: document.getElementById('f-special').value.trim(),
-    tasks: [...formTasks],
-    materials: formMats.map(m=>({...m}))
+  /* ══════════════════════════════
+     🔥 FIREBASE CONFIG
+     Replace these values with your own from:
+     Firebase Console → Project Settings → Your Apps → Web App
+  ══════════════════════════════ */
+  const firebaseConfig = {
+    apiKey: "AIzaSyCPHvJgvXdMT_Eh41QYqjmXpf8XFR4nA7k",
+    authDomain: "ccd-work-orders.firebaseapp.com",
+    projectId: "ccd-work-orders",
+    storageBucket: "ccd-work-orders.firebasestorage.app",
+    messagingSenderId: "679884614336",
+    appId: "1:679884614336:web:7e5cb8fbf4a536435c5b25",
+    measurementId: "G-6E5WCMLYGH"
   };
 
-  if (editId) {
-    const idx = db.findIndex(x=>x.id===editId);
-    db[idx] = {...db[idx], ...data};
-    toast('Work order updated!','ok');
-    closeModal();
-    renderSidebar(document.getElementById('sb-search').value);
-    updateStats();
-    selectWO(editId);
-  } else {
-    const newId = 'WO-' + (1000 + db.length + 1);
-    db.push({ id:newId, ...data, photos:[], timeRecords:[], crewNotes:'' });
-    toast('Work order created!','ok');
-    closeModal();
-    renderSidebar();
-    updateStats();
-    selectWO(newId);
-  }
-}
+  const app = initializeApp(firebaseConfig);
+  const firestore = getFirestore(app);
+  const woCollection = collection(firestore, 'workorders');
 
-function deleteWO() {
-  const w = db.find(x=>x.id===selectedId);
-  if (!w) return;
-  if (!confirm(`Delete ${w.id} — ${w.customer}?\n\nThis cannot be undone.`)) return;
-  db = db.filter(x=>x.id!==selectedId);
-  selectedId = null;
-  document.getElementById('detail-wrap').style.display='none';
-  document.getElementById('welcome').style.display='block';
-  renderSidebar();
-  renderCrewList();
-  updateStats();
-  toast('Work order deleted.','ok');
-}
+  /* ══════════════════════════════
+     STATE
+  ══════════════════════════════ */
+  let db = [];
+  let selectedId = null;
+  let editId = null;
+  let formTasks = [];
+  let formMats = [];
+  let crewPhotos = [];
+  let mode = 'office';
 
-// Form tasks
-function renderFormTasks() {
-  const el = document.getElementById('f-tasks-list');
-  el.innerHTML = formTasks.map((t,i)=>`
-    <div class="editable-item">
-      <span>☐</span><span style="flex:1">${t}</span>
-      <button class="remove-btn" onclick="removeFormTask(${i})">✕</button>
-    </div>`).join('');
-}
+  /* ══════════════════════════════
+     HELPERS
+  ══════════════════════════════ */
+  function today() { return new Date().toISOString().split('T')[0]; }
 
-function addFormTask() {
-  const inp = document.getElementById('f-task-input');
-  const v = inp.value.trim();
-  if (!v) return;
-  formTasks.push(v);
-  inp.value='';
-  renderFormTasks();
-}
-
-function removeFormTask(i) { formTasks.splice(i,1); renderFormTasks(); }
-
-// Form mats
-function renderFormMats() {
-  const el = document.getElementById('f-mats-list');
-  el.innerHTML = formMats.map((m,i)=>`
-    <div class="editable-item">
-      <span class="mat-qty" style="font-size:12px;padding:2px 7px;">${m.qty}</span>
-      <span style="flex:1">${m.name}</span>
-      <span class="mat-unit">${m.unit||''}</span>
-      <button class="remove-btn" onclick="removeFormMat(${i})">✕</button>
-    </div>`).join('');
-}
-
-function addFormMat() {
-  const qty = parseFloat(document.getElementById('f-mat-qty').value)||1;
-  const name = document.getElementById('f-mat-name').value.trim();
-  const unit = document.getElementById('f-mat-unit').value.trim();
-  if (!name) return;
-  formMats.push({qty,name,unit});
-  document.getElementById('f-mat-qty').value='';
-  document.getElementById('f-mat-name').value='';
-  document.getElementById('f-mat-unit').value='';
-  renderFormMats();
-}
-
-function removeFormMat(i) { formMats.splice(i,1); renderFormMats(); }
-
-/* ══════════════════════════════
-   CREW LIST
-══════════════════════════════ */
-function renderCrewList(q='') {
-  const el = document.getElementById('crew-list-items');
-  const lbl = document.getElementById('crew-count-lbl');
-
-  const active = db.filter(w => w.status!=='logged' &&
-    (w.id.toLowerCase().includes(q.toLowerCase()) || w.customer.toLowerCase().includes(q.toLowerCase()))
-  );
-
-  lbl.textContent = `Active Work Orders (${active.length})`;
-
-  if (!active.length) {
-    el.innerHTML=`<div style="background:white;border-radius:14px;padding:48px 20px;text-align:center;">
-      <div style="font-size:40px;opacity:.3;margin-bottom:10px;">✅</div>
-      <div style="font-weight:700;color:var(--ink-soft);">All caught up!</div>
-    </div>`;
-    return;
+  function fmtDate(s) {
+    if (!s) return '—';
+    const d = new Date(s + 'T12:00:00');
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
   }
 
-  el.innerHTML = active.map(w=>`
-    <div class="crew-card" onclick="openCrewDetail('${w.id}')">
-      <div class="crew-card-top">
-        <span class="crew-card-id">${w.id}</span>
-        ${statusBadge(w.status)}
-      </div>
-      <div class="crew-card-cust">${w.customer}</div>
-      <div class="crew-card-addr">📍 ${w.address}</div>
-      <div class="crew-card-foot">
-        <span class="crew-card-date">📅 ${fmtDate(w.date)} &nbsp;· ${w.lead}</span>
-        <span class="crew-card-arr">›</span>
-      </div>
-    </div>`).join('');
-}
-
-function filterCrew(q) { renderCrewList(q); }
-
-/* ══════════════════════════════
-   CREW DETAIL
-══════════════════════════════ */
-let crewWO = null;
-
-function openCrewDetail(id) {
-  crewWO = db.find(x=>x.id===id);
-  if (!crewWO) return;
-
-  crewPhotos = [];
-  document.getElementById('crew-photo-preview').innerHTML='';
-
-  document.getElementById('cd-id').textContent = crewWO.id;
-  document.getElementById('cd-cust').textContent = crewWO.customer;
-  document.getElementById('cd-addr').textContent = crewWO.address;
-  document.getElementById('cd-desc').textContent = crewWO.desc;
-  document.getElementById('cd-sched').textContent = fmtDate(crewWO.date);
-  document.getElementById('cd-lead').textContent = crewWO.lead;
-  document.getElementById('cd-notes').value = crewWO.crewNotes||'';
-
-  // Special instructions
-  const sb = document.getElementById('cd-special-banner');
-  if (crewWO.special) {
-    sb.style.display='flex';
-    document.getElementById('cd-special').textContent = crewWO.special;
-  } else sb.style.display='none';
-
-  // Tasks
-  const ts = document.getElementById('cd-tasks-section');
-  const te = document.getElementById('cd-tasks');
-  if (crewWO.tasks.length) {
-    ts.style.display='block';
-    te.innerHTML = crewWO.tasks.map((t,i)=>`
-      <div class="ctask">
-        <input type="checkbox" id="ct-${i}">
-        <label for="ct-${i}" class="ctask-text">${t}</label>
-      </div>`).join('');
-  } else ts.style.display='none';
-
-  // Materials
-  const ms = document.getElementById('cd-mats-section');
-  const me = document.getElementById('cd-mats');
-  if (crewWO.materials.length) {
-    ms.style.display='block';
-    me.innerHTML = crewWO.materials.map(m=>`
-      <div class="mat-row">
-        <span class="mat-qty">${m.qty}</span>
-        <span class="mat-name">${m.name}</span>
-        <span class="mat-unit">${m.unit||''}</span>
-      </div>`).join('');
-  } else ms.style.display='none';
-
-  // Time entries
-  const mems = crewWO.members.length ? crewWO.members : (crewWO.lead?[crewWO.lead]:[]);
-  document.getElementById('cd-time-entries').innerHTML = mems.map(m=>`
-    <div class="member-entry">
-      <div class="member-name">👷 ${m}</div>
-      <div class="hours-input-wrap">
-        <input type="number" class="hours-input" data-member="${m}" min="0" max="24" step="0.5" placeholder="0" oninput="updateTotal()">
-        <span class="hours-lbl">hrs</span>
-      </div>
-    </div>`).join('');
-
-  // Prefill if already submitted
-  if (crewWO.timeRecords.length) {
-    crewWO.timeRecords.forEach(r=>{
-      const inp = document.querySelector(`#cd-time-entries [data-member="${r.member}"]`);
-      if (inp) inp.value = r.hours;
-    });
-    updateTotal();
-  }
-
-  document.getElementById('crew-list').style.display='none';
-  document.getElementById('crew-detail').classList.add('open');
-}
-
-function backToList() {
-  document.getElementById('crew-list').style.display='flex';
-  document.getElementById('crew-detail').classList.remove('open');
-  crewWO = null;
-}
-
-function updateTotal() {
-  const inputs = document.querySelectorAll('#cd-time-entries .hours-input');
-  let total = 0;
-  inputs.forEach(i=>total+=parseFloat(i.value)||0);
-  const bar = document.getElementById('cd-total');
-  if (total>0) { bar.style.display='flex'; document.getElementById('cd-total-val').textContent=total.toFixed(1); }
-  else bar.style.display='none';
-}
-
-/* ══════════════════════════════
-   PHOTO UPLOAD
-══════════════════════════════ */
-function triggerPhotoUpload() {
-  document.getElementById('crew-photo-input').click();
-}
-
-function handlePhotoUpload(e) {
-  const files = Array.from(e.target.files);
-  files.forEach(file=>{
-    const reader = new FileReader();
-    reader.onload = ev=>{
-      crewPhotos.push(ev.target.result);
-      renderCrewPhotos();
+  function statusBadge(st) {
+    const map = {
+      pending: ['badge-pending','Pending'],
+      progress: ['badge-progress','In Progress'],
+      done: ['badge-done','Completed'],
+      logged: ['badge-logged','Time Logged']
     };
-    reader.readAsDataURL(file);
+    const [cls, lbl] = map[st] || ['badge-logged', st];
+    return `<span class="badge ${cls}">${lbl}</span>`;
+  }
+
+  function toast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = (type==='ok'?'✓  ':type==='err'?'⚠  ':'')+msg;
+    t.className = `toast show${type?' '+type:''}`;
+    setTimeout(()=>t.className='toast', 3200);
+  }
+
+  function showLoading(show) {
+    let el = document.getElementById('loading-overlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'loading-overlay';
+      el.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;font-size:16px;font-weight:600;color:#8B6F3F;';
+      el.innerHTML = '🔄 Connecting to database…';
+      document.body.appendChild(el);
+    }
+    el.style.display = show ? 'flex' : 'none';
+  }
+
+  /* ══════════════════════════════
+     REAL-TIME LISTENER
+     Fires whenever ANY device changes data in Firestore
+  ══════════════════════════════ */
+  function startListening() {
+    showLoading(true);
+    const q = query(woCollection, orderBy('createdAt', 'asc'));
+    onSnapshot(q, (snapshot) => {
+      db = snapshot.docs.map(doc => ({ firestoreId: doc.id, ...doc.data() }));
+      showLoading(false);
+      renderSidebar(document.getElementById('sb-search').value);
+      renderCrewList();
+      updateStats();
+      // Refresh open detail view if it still exists
+      if (selectedId && db.find(x => x.id === selectedId)) {
+        selectWO(selectedId);
+      }
+    }, (err) => {
+      showLoading(false);
+      toast('⚠ Database connection error. Check your Firebase config.', 'err');
+      console.error('Firestore error:', err);
+    });
+  }
+
+  /* ══════════════════════════════
+     STATS
+  ══════════════════════════════ */
+  function updateStats() {
+    document.getElementById('s-total').textContent = db.length;
+    document.getElementById('s-pending').textContent = db.filter(w=>w.status==='pending').length;
+    document.getElementById('s-active').textContent = db.filter(w=>w.status==='progress').length;
+    document.getElementById('s-done').textContent = db.filter(w=>w.status==='done'||w.status==='logged').length;
+  }
+
+  /* ══════════════════════════════
+     SIDEBAR
+  ══════════════════════════════ */
+  function renderSidebar(q='') {
+    const list = document.getElementById('sb-list');
+    const items = q ? db.filter(w=>
+      w.id.toLowerCase().includes(q.toLowerCase())||
+      w.customer.toLowerCase().includes(q.toLowerCase())||
+      w.address.toLowerCase().includes(q.toLowerCase())
+    ) : db;
+
+    if (!items.length) {
+      list.innerHTML = `<div style="padding:30px;text-align:center;color:var(--ink-faint);font-size:13px;">No work orders yet. Create one to get started!</div>`;
+      return;
+    }
+
+    list.innerHTML = items.map(w => `
+      <div class="wo-row${selectedId===w.id?' active':''}" onclick="selectWO('${w.id}')">
+        <div class="wo-row-top">
+          <span class="wo-id">${w.id}</span>
+          ${statusBadge(w.status)}
+        </div>
+        <div class="wo-cust">${w.customer}</div>
+        <div class="wo-meta">
+          <span>📅 ${fmtDate(w.date)}</span>
+          <span>· ${w.lead||'Unassigned'}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  window.filterSidebar = function(q) { renderSidebar(q); };
+
+  /* ══════════════════════════════
+     OFFICE DETAIL
+  ══════════════════════════════ */
+  window.selectWO = function(id) {
+    selectedId = id;
+    const w = db.find(x=>x.id===id);
+    if (!w) return;
+
+    renderSidebar(document.getElementById('sb-search').value);
+    document.getElementById('welcome').style.display = 'none';
+    document.getElementById('detail-wrap').style.display = 'block';
+
+    document.getElementById('d-id').textContent = w.id;
+    document.getElementById('d-cust').textContent = w.customer;
+    document.getElementById('d-addr').textContent = w.address;
+    document.getElementById('d-badge').innerHTML = statusBadge(w.status);
+
+    document.getElementById('d-phone').textContent = w.phone||'—';
+    document.getElementById('d-lead').textContent = w.lead||'—';
+    document.getElementById('d-members').textContent = w.members.join(', ')||'—';
+    document.getElementById('d-sched').textContent = fmtDate(w.date);
+    document.getElementById('d-priority').textContent = w.priority;
+    document.getElementById('d-type').textContent = w.type||'—';
+    document.getElementById('d-desc').textContent = w.desc;
+
+    const specWrap = document.getElementById('d-special-wrap');
+    if (w.special && w.special.trim()) {
+      specWrap.style.display='block';
+      document.getElementById('d-special').textContent = w.special;
+    } else { specWrap.style.display='none'; }
+
+    const cnWrap = document.getElementById('d-crewnote-wrap');
+    if (w.crewNotes) { cnWrap.style.display='block'; document.getElementById('d-crewnote').textContent=w.crewNotes; }
+    else cnWrap.style.display='none';
+
+    const tl = document.getElementById('d-tasks-list');
+    tl.innerHTML = w.tasks.length
+      ? w.tasks.map(t=>`<div class="task-line"><input type="checkbox" class="task-check" disabled><span>${t}</span></div>`).join('')
+      : `<p style="color:var(--ink-soft);font-size:14px;">No tasks listed.</p>`;
+
+    const ml = document.getElementById('d-mats-list');
+    ml.innerHTML = w.materials.length
+      ? w.materials.map(m=>`<div class="mat-row"><span class="mat-qty">${m.qty}</span><span class="mat-name">${m.name}</span><span class="mat-unit">${m.unit||''}</span></div>`).join('')
+      : `<p style="color:var(--ink-soft);font-size:14px;">No materials listed.</p>`;
+
+    renderOfficePhotos(w);
+    renderOfficeTime(w);
+    showTab('info', document.querySelector('.tab-item'));
+  };
+
+  function renderOfficePhotos(w) {
+    const grid = document.getElementById('d-photos-grid');
+    if (!w.photos || !w.photos.length) {
+      grid.innerHTML = `<div style="color:var(--ink-soft);font-size:14px;padding:10px 0;">No photos attached yet. Crews can submit photos from the mobile view.</div>`;
+      return;
+    }
+    grid.innerHTML = `<div class="photo-grid">${w.photos.map(src=>`<img class="photo-thumb" src="${src}" onclick="openLightbox(this.src)">`).join('')}</div>`;
+  }
+
+  function renderOfficeTime(w) {
+    const el = document.getElementById('d-time-content');
+    if (!w.timeRecords || !w.timeRecords.length) {
+      el.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--ink-soft);font-size:14px;">⏱ No time recorded yet.<br><span style="font-size:12px;color:var(--ink-faint);">Time appears here once the crew submits it.</span></div>`;
+      return;
+    }
+    const total = w.timeRecords.reduce((s,r)=>s+r.hours,0);
+    el.innerHTML = `
+      <div class="time-header"><div>Crew Member</div><div>Date</div><div>Hours</div></div>
+      ${w.timeRecords.map(r=>`
+        <div class="time-row">
+          <div class="time-member">👷 ${r.member}</div>
+          <div class="time-date">${r.date ? fmtDate(r.date) : '—'}</div>
+          <div><span class="time-chip">${r.hours.toFixed(1)}</span></div>
+        </div>`).join('')}
+      <div class="time-total-bar">
+        <span class="time-total-lbl">Total Crew Hours</span>
+        <span class="time-total-val">${total.toFixed(1)} hrs</span>
+      </div>`;
+  }
+
+  window.showTab = function(tab, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(b=>b.classList.remove('active'));
+    document.getElementById('tab-'+tab).classList.add('active');
+    document.querySelectorAll('.tab-item').forEach(b=>{
+      const match = {info:'Detail',tasks:'Task',mats:'Material',photos:'Photo',time:'Time'};
+      if (b.textContent.includes(match[tab])) b.classList.add('active');
+    });
+  };
+
+  /* ══════════════════════════════
+     CREATE / EDIT MODAL
+  ══════════════════════════════ */
+  window.openNewModal = function() {
+    editId = null;
+    formTasks = [];
+    formMats = [];
+    clearForm();
+    document.getElementById('modal-title').textContent = 'New Work Order';
+    document.getElementById('modal-save-btn').textContent = 'Create Work Order';
+    document.getElementById('f-date').value = today();
+    document.getElementById('f-status').value = 'pending';
+    renderFormTasks();
+    renderFormMats();
+    document.getElementById('modal-overlay').classList.add('open');
+  };
+
+  window.openEditModal = function() {
+    const w = db.find(x=>x.id===selectedId);
+    if (!w) return;
+    editId = w.id;
+    formTasks = [...w.tasks];
+    formMats = w.materials.map(m=>({...m}));
+    document.getElementById('f-cust').value = w.customer;
+    document.getElementById('f-phone').value = w.phone||'';
+    document.getElementById('f-addr').value = w.address;
+    document.getElementById('f-type').value = w.type||'';
+    document.getElementById('f-priority').value = w.priority;
+    document.getElementById('f-lead').value = w.lead||'';
+    document.getElementById('f-members').value = w.members.join(', ');
+    document.getElementById('f-date').value = w.date;
+    document.getElementById('f-status').value = w.status==='done'||w.status==='logged'?'pending':w.status;
+    document.getElementById('f-desc').value = w.desc;
+    document.getElementById('f-special').value = w.special||'';
+    renderFormTasks();
+    renderFormMats();
+    document.getElementById('modal-title').textContent = 'Edit Work Order';
+    document.getElementById('modal-save-btn').textContent = 'Save Changes';
+    document.getElementById('modal-overlay').classList.add('open');
+  };
+
+  function clearForm() {
+    ['f-cust','f-phone','f-addr','f-type','f-lead','f-members','f-desc','f-special']
+      .forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-priority').value='Normal';
+  }
+
+  window.closeModal = function() { document.getElementById('modal-overlay').classList.remove('open'); };
+
+  window.saveWO = async function() {
+    const cust = document.getElementById('f-cust').value.trim();
+    const addr = document.getElementById('f-addr').value.trim();
+    const desc = document.getElementById('f-desc').value.trim();
+    if (!cust||!addr||!desc) { toast('Please fill all required fields.','err'); return; }
+
+    const lead = document.getElementById('f-lead').value.trim();
+    const memberStr = document.getElementById('f-members').value;
+    const members = memberStr.split(',').map(s=>s.trim()).filter(Boolean);
+    if (lead && !members.includes(lead)) members.unshift(lead);
+
+    const data = {
+      customer: cust,
+      phone: document.getElementById('f-phone').value.trim(),
+      address: addr,
+      type: document.getElementById('f-type').value.trim(),
+      priority: document.getElementById('f-priority').value,
+      lead, members,
+      date: document.getElementById('f-date').value,
+      status: document.getElementById('f-status').value,
+      desc,
+      special: document.getElementById('f-special').value.trim(),
+      tasks: [...formTasks],
+      materials: formMats.map(m=>({...m}))
+    };
+
+    try {
+      if (editId) {
+        // Update existing doc in Firestore
+        const existing = db.find(x=>x.id===editId);
+        await updateDoc(doc(firestore, 'workorders', existing.firestoreId), data);
+        toast('Work order updated!','ok');
+        closeModal();
+        // onSnapshot will re-render automatically
+      } else {
+        // Generate WO ID
+        const newId = 'WO-' + (1000 + db.length + 1);
+        await addDoc(woCollection, {
+          id: newId,
+          ...data,
+          photos: [],
+          timeRecords: [],
+          crewNotes: '',
+          createdAt: Date.now()
+        });
+        toast('Work order created!','ok');
+        closeModal();
+        selectedId = newId; // auto-select the new one after snapshot updates
+      }
+    } catch(e) {
+      toast('Save failed. Check Firebase config.', 'err');
+      console.error(e);
+    }
+  };
+
+  window.deleteWO = async function() {
+    const w = db.find(x=>x.id===selectedId);
+    if (!w) return;
+    if (!confirm(`Delete ${w.id} — ${w.customer}?\n\nThis cannot be undone.`)) return;
+    try {
+      await deleteDoc(doc(firestore, 'workorders', w.firestoreId));
+      selectedId = null;
+      document.getElementById('detail-wrap').style.display='none';
+      document.getElementById('welcome').style.display='block';
+      toast('Work order deleted.','ok');
+    } catch(e) {
+      toast('Delete failed.','err');
+      console.error(e);
+    }
+  };
+
+  /* ══════════════════════════════
+     FORM TASKS / MATERIALS
+  ══════════════════════════════ */
+  function renderFormTasks() {
+    const el = document.getElementById('f-tasks-list');
+    el.innerHTML = formTasks.map((t,i)=>`
+      <div class="editable-item">
+        <span>☐</span><span style="flex:1">${t}</span>
+        <button class="remove-btn" onclick="removeFormTask(${i})">✕</button>
+      </div>`).join('');
+  }
+
+  window.addFormTask = function() {
+    const inp = document.getElementById('f-task-input');
+    const v = inp.value.trim();
+    if (!v) return;
+    formTasks.push(v);
+    inp.value='';
+    renderFormTasks();
+  };
+
+  window.removeFormTask = function(i) { formTasks.splice(i,1); renderFormTasks(); };
+
+  function renderFormMats() {
+    const el = document.getElementById('f-mats-list');
+    el.innerHTML = formMats.map((m,i)=>`
+      <div class="editable-item">
+        <span class="mat-qty" style="font-size:12px;padding:2px 7px;">${m.qty}</span>
+        <span style="flex:1">${m.name}</span>
+        <span class="mat-unit">${m.unit||''}</span>
+        <button class="remove-btn" onclick="removeFormMat(${i})">✕</button>
+      </div>`).join('');
+  }
+
+  window.addFormMat = function() {
+    const qty = parseFloat(document.getElementById('f-mat-qty').value)||1;
+    const name = document.getElementById('f-mat-name').value.trim();
+    const unit = document.getElementById('f-mat-unit').value.trim();
+    if (!name) return;
+    formMats.push({qty,name,unit});
+    document.getElementById('f-mat-qty').value='';
+    document.getElementById('f-mat-name').value='';
+    document.getElementById('f-mat-unit').value='';
+    renderFormMats();
+  };
+
+  window.removeFormMat = function(i) { formMats.splice(i,1); renderFormMats(); };
+
+  /* ══════════════════════════════
+     CREW LIST
+  ══════════════════════════════ */
+  function renderCrewList(q='') {
+    const el = document.getElementById('crew-list-items');
+    const lbl = document.getElementById('crew-count-lbl');
+
+    const active = db.filter(w => w.status!=='logged' &&
+      (w.id.toLowerCase().includes((q||'').toLowerCase()) || w.customer.toLowerCase().includes((q||'').toLowerCase()))
+    );
+
+    lbl.textContent = `Active Work Orders (${active.length})`;
+
+    if (!active.length) {
+      el.innerHTML=`<div style="background:white;border-radius:14px;padding:48px 20px;text-align:center;">
+        <div style="font-size:40px;opacity:.3;margin-bottom:10px;">✅</div>
+        <div style="font-weight:700;color:var(--ink-soft);">All caught up!</div>
+      </div>`;
+      return;
+    }
+
+    el.innerHTML = active.map(w=>`
+      <div class="crew-card" onclick="openCrewDetail('${w.id}')">
+        <div class="crew-card-top">
+          <span class="crew-card-id">${w.id}</span>
+          ${statusBadge(w.status)}
+        </div>
+        <div class="crew-card-cust">${w.customer}</div>
+        <div class="crew-card-addr">📍 ${w.address}</div>
+        <div class="crew-card-foot">
+          <span class="crew-card-date">📅 ${fmtDate(w.date)} &nbsp;· ${w.lead}</span>
+          <span class="crew-card-arr">›</span>
+        </div>
+      </div>`).join('');
+  }
+
+  window.filterCrew = function(q) { renderCrewList(q); };
+
+  /* ══════════════════════════════
+     CREW DETAIL
+  ══════════════════════════════ */
+  let crewWO = null;
+
+  window.openCrewDetail = function(id) {
+    crewWO = db.find(x=>x.id===id);
+    if (!crewWO) return;
+
+    crewPhotos = [];
+    document.getElementById('crew-photo-preview').innerHTML='';
+
+    document.getElementById('cd-id').textContent = crewWO.id;
+    document.getElementById('cd-cust').textContent = crewWO.customer;
+    document.getElementById('cd-addr').textContent = crewWO.address;
+    document.getElementById('cd-desc').textContent = crewWO.desc;
+    document.getElementById('cd-sched').textContent = fmtDate(crewWO.date);
+    document.getElementById('cd-lead').textContent = crewWO.lead;
+    document.getElementById('cd-notes').value = crewWO.crewNotes||'';
+
+    const sb = document.getElementById('cd-special-banner');
+    if (crewWO.special) {
+      sb.style.display='flex';
+      document.getElementById('cd-special').textContent = crewWO.special;
+    } else sb.style.display='none';
+
+    const ts = document.getElementById('cd-tasks-section');
+    const te = document.getElementById('cd-tasks');
+    if (crewWO.tasks.length) {
+      ts.style.display='block';
+      te.innerHTML = crewWO.tasks.map((t,i)=>`
+        <div class="ctask">
+          <input type="checkbox" id="ct-${i}">
+          <label for="ct-${i}" class="ctask-text">${t}</label>
+        </div>`).join('');
+    } else ts.style.display='none';
+
+    const ms = document.getElementById('cd-mats-section');
+    const me = document.getElementById('cd-mats');
+    if (crewWO.materials.length) {
+      ms.style.display='block';
+      me.innerHTML = crewWO.materials.map(m=>`
+        <div class="mat-row">
+          <span class="mat-qty">${m.qty}</span>
+          <span class="mat-name">${m.name}</span>
+          <span class="mat-unit">${m.unit||''}</span>
+        </div>`).join('');
+    } else ms.style.display='none';
+
+    const mems = crewWO.members.length ? crewWO.members : (crewWO.lead?[crewWO.lead]:[]);
+    document.getElementById('cd-time-entries').innerHTML = mems.map(m=>`
+      <div class="member-entry">
+        <div class="member-name">👷 ${m}</div>
+        <div class="hours-input-wrap">
+          <input type="number" class="hours-input" data-member="${m}" min="0" max="24" step="0.5" placeholder="0" oninput="updateTotal()">
+          <span class="hours-lbl">hrs</span>
+        </div>
+      </div>`).join('');
+
+    if (crewWO.timeRecords && crewWO.timeRecords.length) {
+      crewWO.timeRecords.forEach(r=>{
+        const inp = document.querySelector(`#cd-time-entries [data-member="${r.member}"]`);
+        if (inp) inp.value = r.hours;
+      });
+      updateTotal();
+    }
+
+    document.getElementById('crew-list').style.display='none';
+    document.getElementById('crew-detail').classList.add('open');
+  };
+
+  window.backToList = function() {
+    document.getElementById('crew-list').style.display='flex';
+    document.getElementById('crew-detail').classList.remove('open');
+    crewWO = null;
+  };
+
+  window.updateTotal = function() {
+    const inputs = document.querySelectorAll('#cd-time-entries .hours-input');
+    let total = 0;
+    inputs.forEach(i=>total+=parseFloat(i.value)||0);
+    const bar = document.getElementById('cd-total');
+    if (total>0) { bar.style.display='flex'; document.getElementById('cd-total-val').textContent=total.toFixed(1); }
+    else bar.style.display='none';
+  };
+
+  /* ══════════════════════════════
+     PHOTO UPLOAD
+  ══════════════════════════════ */
+  window.triggerPhotoUpload = function() {
+    document.getElementById('crew-photo-input').click();
+  };
+
+  window.handlePhotoUpload = function(e) {
+    const files = Array.from(e.target.files);
+    files.forEach(file=>{
+      const reader = new FileReader();
+      reader.onload = ev=>{
+        crewPhotos.push(ev.target.result);
+        renderCrewPhotos();
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value='';
+  };
+
+  function renderCrewPhotos() {
+    const el = document.getElementById('crew-photo-preview');
+    el.innerHTML = crewPhotos.map((src,i)=>`
+      <div class="crew-photo-item">
+        <img src="${src}">
+        <button class="crew-photo-del" onclick="removeCrewPhoto(${i})">✕</button>
+      </div>`).join('');
+  }
+
+  window.removeCrewPhoto = function(i) {
+    crewPhotos.splice(i,1);
+    renderCrewPhotos();
+  };
+
+  /* ══════════════════════════════
+     SUBMIT TIME (saves to Firestore)
+  ══════════════════════════════ */
+  window.submitTime = async function() {
+    if (!crewWO) return;
+    const inputs = document.querySelectorAll('#cd-time-entries .hours-input');
+    const records = [];
+    const todayStr = today();
+
+    inputs.forEach(inp=>{
+      const hrs = parseFloat(inp.value);
+      if (hrs>0) records.push({member:inp.dataset.member, hours:hrs, date:todayStr});
+    });
+
+    if (!records.length) { toast('Please enter hours for at least one crew member.','err'); return; }
+
+    try {
+      await updateDoc(doc(firestore, 'workorders', crewWO.firestoreId), {
+        timeRecords: records,
+        crewNotes: document.getElementById('cd-notes').value.trim(),
+        status: 'logged',
+        photos: [...(crewWO.photos||[]), ...crewPhotos]
+      });
+      toast('Time record submitted! ✓','ok');
+      setTimeout(()=>backToList(), 1400);
+    } catch(e) {
+      toast('Submit failed. Check connection.','err');
+      console.error(e);
+    }
+  };
+
+  /* ══════════════════════════════
+     MISC
+  ══════════════════════════════ */
+  window.switchMode = function(m) {
+    mode = m;
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('view-'+m).classList.add('active');
+    document.getElementById('btn-'+m).classList.add('active');
+    document.getElementById('role-label').textContent = m==='office'?'Office':'Crew Portal';
+    if (m==='crew') renderCrewList();
+    else { renderSidebar(); updateStats(); }
+  };
+
+  window.openLightbox = function(src) {
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox').classList.add('open');
+  };
+
+  window.printWO = function() { window.print(); };
+
+  /* ══════════════════════════════
+     INIT
+  ══════════════════════════════ */
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('f-date').value = today();
+    startListening(); // connects to Firestore and renders live data
+    document.getElementById('modal-overlay').addEventListener('click', function(e){
+      if (e.target===this) closeModal();
+    });
   });
-  e.target.value='';
-}
 
-function renderCrewPhotos() {
-  const el = document.getElementById('crew-photo-preview');
-  el.innerHTML = crewPhotos.map((src,i)=>`
-    <div class="crew-photo-item">
-      <img src="${src}">
-      <button class="crew-photo-del" onclick="removeCrewPhoto(${i})">✕</button>
-    </div>`).join('');
-}
-
-function removeCrewPhoto(i) {
-  crewPhotos.splice(i,1);
-  renderCrewPhotos();
-}
-
-/* ══════════════════════════════
-   SUBMIT TIME
-══════════════════════════════ */
-function submitTime() {
-  if (!crewWO) return;
-  const inputs = document.querySelectorAll('#cd-time-entries .hours-input');
-  const records = [];
-  const todayStr = today();
-
-  inputs.forEach(inp=>{
-    const hrs = parseFloat(inp.value);
-    if (hrs>0) records.push({member:inp.dataset.member, hours:hrs, date:todayStr});
-  });
-
-  if (!records.length) { toast('Please enter hours for at least one crew member.','err'); return; }
-
-  crewWO.timeRecords = records;
-  crewWO.crewNotes = document.getElementById('cd-notes').value.trim();
-  crewWO.status = 'logged';
-  if (crewPhotos.length) crewWO.photos = [...crewWO.photos, ...crewPhotos];
-
-  toast('Time record submitted! ✓','ok');
-  renderCrewList();
-  renderSidebar();
-  updateStats();
-
-  // Refresh office detail if same WO is open
-  if (selectedId===crewWO.id) selectWO(crewWO.id);
-
-  setTimeout(()=>backToList(), 1400);
-}
-
-/* ══════════════════════════════
-   LIGHTBOX
-══════════════════════════════ */
-function openLightbox(src) {
-  document.getElementById('lightbox-img').src = src;
-  document.getElementById('lightbox').classList.add('open');
-}
-
-/* ══════════════════════════════
-   PRINT
-══════════════════════════════ */
-function printWO() { window.print(); }
-
-/* ── Modal overlay close ── */
-document.getElementById('modal-overlay').addEventListener('click', function(e){
-  if (e.target===this) closeModal();
-});
 </script>
 </body>
 </html>
